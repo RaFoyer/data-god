@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react';
-import { useChat } from 'ai/react';
-import { Send, Paperclip, StopCircle, Copy } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import { useAuth } from '@/lib/hooks/useAuth';
-import { db } from '@/lib/firebase/firebaseUtils';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { Bar } from 'react-chartjs-2';
+import { useState, useRef, useEffect } from 'react'
+import { Send, Paperclip, StopCircle, Copy } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import { useChat } from 'ai/react'
+import { useAuth } from '@/lib/hooks/useAuth'
+import { db } from '@/lib/firebase/firebaseUtils'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { Bar } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -16,63 +16,70 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
+} from 'chart.js'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
+
+type Message = {
+  id: string
+  content: string
+  sender: 'user' | 'ai'
+  timestamp: Date
+}
 
 const ChatInterface = () => {
-  const { user } = useAuth();
+  const { user } = useAuth()
   const { messages, input, handleInputChange, handleSubmit, isLoading, stop } = useChat({
     api: '/api/chat',
-  });
+  })
 
-  const [fileUpload, setFileUpload] = useState<File | null>(null);
-  const [chartData, setChartData] = useState<any>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [fileUpload, setFileUpload] = useState<File | null>(null)
+  const [chartData, setChartData] = useState<any>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  useEffect(scrollToBottom, [messages]);
+  useEffect(scrollToBottom, [messages])
 
   useEffect(() => {
     const saveMessage = async () => {
       if (user && messages.length > 0) {
-        const lastMessage = messages[messages.length - 1];
+        const lastMessage = messages[messages.length - 1]
         try {
           await addDoc(collection(db, `users/${user.uid}/messages`), {
             content: lastMessage.content,
             role: lastMessage.role,
             timestamp: serverTimestamp(),
-          });
+          })
 
           if (lastMessage.role === 'assistant' && lastMessage.content.includes('CHART_DATA:')) {
-            const chartDataString = lastMessage.content.split('CHART_DATA:')[1].trim();
-            const parsedChartData = JSON.parse(chartDataString);
-            setChartData(parsedChartData);
+            const chartDataString = lastMessage.content.split('CHART_DATA:')[1].trim()
+            const parsedChartData = JSON.parse(chartDataString)
+            setChartData(parsedChartData)
           }
         } catch (error) {
-          console.error('Error saving message to Firestore:', error);
+          console.error('Error saving message to Firestore:', error)
         }
       }
-    };
+    }
 
-    saveMessage();
-  }, [messages, user]);
+    saveMessage()
+  }, [messages, user])
 
   const handleFileUpload = (file: File) => {
-    setFileUpload(file);
+    setFileUpload(file)
     // TODO: Implement file upload logic
-  };
+  }
 
   const handleCopyMessage = (content: string) => {
-    navigator.clipboard.writeText(content);
+    navigator.clipboard.writeText(content)
     // TODO: Add a toast notification for successful copy
-  };
+  }
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow-lg">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-amber-50 to-orange-100">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -123,8 +130,8 @@ const ChatInterface = () => {
         )}
         <div ref={messagesEndRef} />
       </div>
-      <div className="border-t bg-gray-50 p-4">
-        <form onSubmit={handleSubmit} className="flex items-center space-x-2">
+      <div className="border-t bg-gradient-to-br from-amber-50 to-orange-100 p-4 shadow-md">
+        <div className="flex items-center space-x-2">
           <button 
             type="button"
             onClick={() => document.getElementById('file-upload')?.click()}
@@ -152,7 +159,7 @@ const ChatInterface = () => {
           >
             <Send />
           </button>
-        </form>
+        </div>
         {isLoading && (
           <button
             onClick={stop}
@@ -163,7 +170,7 @@ const ChatInterface = () => {
         )}
       </div>
     </div>
-  );
+  )
 }
 
-export default ChatInterface;
+export default ChatInterface
